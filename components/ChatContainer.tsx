@@ -1,54 +1,79 @@
-"use client";
-import { FormEvent, SetStateAction, useState, Dispatch } from "react";
+"use client"
+import { FormEvent, useState, useCallback } from "react";
 
 interface Conversation {
-  question: String;
-  answer: String;
+  question: string;
+  answer: string;
 }
 
-async function onSubmit(
-  event: FormEvent<HTMLFormElement>,
-  chat: Conversation[],
-  setChat: Dispatch<SetStateAction<Conversation[]>>
-) {
-  event.preventDefault();
-
-  let question = new FormData(event.currentTarget).get("question")
-  event.currentTarget.reset();
-
-  if (question != undefined) {
-    question = question.toString();
-    console.log(question);
+async function askQuestion(question: string): Promise<string> {
+  try {
     const response = await fetch("/api/askQuestion", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        prompt: question,
-      }),
+      body: JSON.stringify({ prompt: question }),
     });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch');
+    }
+
     const { data } = await response.json();
-    setChat([...chat, { question: question, answer: data }]);
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    return "Sorry, something went wrong.";
   }
 }
 
 export default function ChatContainer() {
   const [chat, setChat] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const question = formData.get("question")?.toString();
+
+    if (question) {
+      setLoading(true);
+      let fullAnswer = await askQuestion(question);
+      let displayedAnswer = '';
+      setChat((prevChat) => [...prevChat, { question, answer: '' }]);
+
+      const intervalId = setInterval(() => {
+        if (displayedAnswer.length < fullAnswer.length) {
+          displayedAnswer += fullAnswer[displayedAnswer.length];
+          setChat((prevChat) => {
+            const updatedChat = [...prevChat];
+            updatedChat[updatedChat.length - 1].answer = displayedAnswer;
+            return updatedChat;
+          });
+        } else {
+          clearInterval(intervalId);
+          setLoading(false);
+        }
+      }, 50);
+
+      if (event.currentTarget) {
+        event.currentTarget.reset();
+      }
+    }
+  }, []);
+
   return (
     <div id="chatContainer">
-      <form
-        id="questionForm"
-        method="POST"
-        onSubmit={(event) => onSubmit(event, chat, setChat)}
-      >
-        <input type="text" name="question" placeholder="Ask a question"/>
-        <input type="submit" value="Submit" />
+      <form id="questionForm" onSubmit={handleSubmit}>
+        <input type="text" name="question" placeholder="Ask a question" disabled={loading} />
+        <input type="submit" value="Submit" disabled={loading} />
       </form>
+      {loading && <div>Loading...</div>}
       {chat.map((conv, i) => (
         <div key={i} className="conversation">
-          <div>Question: {conv.question}</div>
-          <div>Answer: {conv.answer}</div>
+          <div>{conv.question}</div>
+          <div>{conv.answer}</div>
         </div>
       ))}
     </div>

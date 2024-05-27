@@ -12,7 +12,7 @@ html {
 }
 
 main {
-  @apply h-[100vh] px-5;
+  @apply h-[100vh] px-5 flex justify-center items-center;
 }
 
 header {
@@ -27,16 +27,17 @@ footer {
 
 #chatContainer {
   @apply bg-slate-600;
-  @apply h-full p-5 flex flex-col;
+  @apply h-full p-5 md:p-10 flex flex-col;
+  @apply max-w-4xl mx-auto my-5 rounded-lg shadow-lg;
 }
 
 #questionForm {
-  @apply flex justify-around;
+  @apply flex gap-2 pt-2;
 }
 
 #questionForm input[type="text"] {
-  @apply p-1 border-none w-full rounded-sm;
-  @apply text-black;
+  @apply p-2 border-none rounded-md;
+  @apply text-black text-lg flex-grow;
 }
 
 #questionForm input[type="text"]:focus {
@@ -44,13 +45,22 @@ footer {
 }
 
 #questionForm input[type="submit"] {
-  @apply cursor-pointer bg-green-500 text-black font-bold ml-2 p-1 rounded-sm;
+  @apply cursor-pointer bg-green-500 text-black font-bold py-2 px-5 rounded-md;
+  @apply transition-transform transform hover:scale-105;
 }
 
 .conversation {
-  @apply my-3 border-2 border-black;
+  @apply my-3 flex flex-col gap-2;
 }
 
 .conversation div {
-  @apply p-2;
+  @apply p-3 rounded-md;
+}
+
+.conversation div:nth-child(odd) {
+  @apply bg-blue-500 text-white self-start;
+}
+
+.conversation div:nth-child(even) {
+  @apply bg-gray-300 text-black self-end;
 }
